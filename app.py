@@ -2,11 +2,14 @@ import os
 import streamlit as st
 from typing import Generator
 from groq import Groq
+from dotenv.main import load_dotenv
 
+load_dotenv()
+
+# Initialize Groq client
 client = Groq(
-    api_key=os.getenv("GROQ_API"),
-)
-                
+    api_key=os.getenv("GROQ_API")
+)              
 
 st.set_page_config(page_title="Roleplayer")
 
