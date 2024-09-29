@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="p-4">
+
+    <div class="flex lg:flex-row flex-col w-full">
+        <div class="lg:p-8 p-4 lg:w-1/2 flex flex-col gap-6">
+            <h2 class="lg:text-lg text-sm font-bold">Supercharged analysis & monitoring tools</h2>
+            <h1 class="lg:text-8xl text-4xl font-bold">Search Engine Optimization Made Easy</h1>
+            <div class="flex justify-between border rounded-md mt-4 items-center">
+                <input type="url" id="url" name="url"
+                    class="lg:text-xl text-base px-4 py-4 bg-gray-50  border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    placeholder="https://example.com" required />
+                    <button onclick="getDigest()" type="button"
+                    class="lg:text-xl text-base text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-4 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Analyze</button>    
+            </div>
+            <p class="lg:text-xl text-base">Trusted by over 15,000 webmasters, small business owners & SEO agencies in over 120 countries.</p>
+        </div>
+        <div id="text" class="lg:w-1/2 lg-p-8 p-4 text-base"></div>
+    </div>
+
+    <script>
+
+
+        if (localStorage.getItem("permission") == null) {
+            localStorage.setItem('permission', 'false')
+        }
+
+
+        function getDigest() {
+
+            const permission = localStorage.getItem('permission')
+
+            if (permission != 'false') {
+                window.alert("Over")
+            }
+            else {
+                const url = document.getElementById('url').value
+                const div = document.getElementById('text')
+                div.textContent = "Loading..."
+
+                fetch('http://127.0.0.1:5000/api/data', {
+                    method: 'POST', // Use POST method
+                    headers: {
+                        'Content-Type': 'application/json' // Send JSON data
+                    },
+                    body: JSON.stringify({ url: url }) // Convert JS object to JSON
+                })
+                    .then(response => response.json()) // Parse the JSON response
+                    .then(data => {
+                        localStorage.setItem('permission', 'false')
+                        div.innerHTML = data.content
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error); // Handle errors
+                    });
+            }
+        }
+    </script>
+
+</body>
+
+</html>
