@@ -1,15 +1,15 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from get import getInfo
 import os
 from dotenv import load_dotenv
 from groq import Groq
-import markdown
 load_dotenv()
 
 client = Groq(
     api_key=os.getenv("GROQ_API"),
 )
 
+"""
 def getAISuggest(data):
     chat_completion = client.chat.completions.create(
                 model="llama3-70b-8192",
@@ -23,6 +23,7 @@ def getAISuggest(data):
             )
     return chat_completion.choices[0].message.content
 
+"""
 
 app = Flask(__name__)
 
@@ -31,12 +32,14 @@ def giveDigest():
     req_data = request.json  # Parse the JSON data
     url = req_data.get("url") 
     data = getInfo(url)
+    """
     dataFromAI = getAISuggest(data)
     response = {
         'status':"success",
         'content': dataFromAI
     }
-    return response
+    """
+    return jsonify(data)
 
 @app.route('/')
 def index():

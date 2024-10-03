@@ -56,23 +56,19 @@ def get_page_load_speed(url):
     except requests.RequestException:
         return None
 
-def scrape_text_content(url):
-    # Send a GET request to the webpage
-    response = requests.get(url)
-    
-    # Parse the page content with BeautifulSoup
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    # Extract the text content
-    text_content = soup.get_text(separator=' ', strip=True)
-    
-    # Remove extra spaces, newlines, and tabs
-    cleaned_text = ' '.join(text_content.split())
-    
-    word_count = len(cleaned_text.split())
-    
-    return cleaned_text, word_count
 
+def check_broken_link(url):
+    try:
+        response = requests.head(url, allow_redirects=True, timeout=5)  # Using head request to check the link
+        if response.status_code >= 400:
+            return True  # Link is broken
+        return False
+    except requests.exceptions.RequestException:
+        return True  # If any exception occurs, we consider the link broken
+
+
+
+#export function
 def getInfo(current_url):
     try:
         response = requests.get(current_url, timeout=10)
@@ -96,11 +92,6 @@ def getInfo(current_url):
             if icon_link and 'href' in icon_link.attrs:
                 favicon = urljoin(current_url, icon_link['href'])
             
-            # Extract first image
-            first_image = False
-            img_tag = soup.find('img')
-            if img_tag and 'src' in img_tag.attrs:
-                first_image = urljoin(current_url, img_tag['src'])
 
             # Extract all headings
             headings = {
@@ -112,7 +103,44 @@ def getInfo(current_url):
                 'h6': [h6.get_text(strip=True) for h6 in soup.find_all('h6')]
             }
             
-            text_content, word_count, = scrape_text_content(current_url)
+            # Extract Content
+            text_content = soup.get_text(separator=' ', strip=True)
+            cleaned_text = ' '.join(text_content.split())
+            word_count = len(cleaned_text.split())
+            
+            #Extract Images Information
+            images = soup.find_all('img')
+            total_images = len(images)
+            images_without_alt = 0
+            
+            for img in images:
+                if not img.has_attr('alt') or not img['alt'].strip():  # Check if alt is missing or empty
+                    images_without_alt += 1
+                    
+                    
+                    
+            # Extract Links
+            links = soup.find_all('a', href=True)
+    
+            internal_links = []
+            external_links = []
+            broken_links = []
+            
+            domain = urlparse(current_url).netloc
+            
+            for link in links:
+                href = link['href']
+                full_url = urljoin(current_url, href)
+                
+                # Check if the link is internal or external
+                if domain in urlparse(full_url).netloc:
+                    internal_links.append(full_url)
+                else:
+                    external_links.append(full_url)
+                
+                if check_broken_link(full_url):
+                    broken_links.append(full_url)
+            
 
             # Store crawled data
             crawled_data = {
@@ -121,14 +149,19 @@ def getInfo(current_url):
                 'title': title,
                 'meta_description': meta_description,
                 'favicon': favicon,
-                'first_image': first_image,
                 'headings': headings,
-                'text-content':text_content,
-                'words-count': word_count,
-                'SSL': is_https(current_url),
-                'robots.txt': has_robots_txt(extract_domain_name(current_url)),
-                'sitemap.xml': has_sitemap_xml(extract_domain_name(current_url)),
-                'page-speed': get_page_load_speed(current_url)
+                'text_content':text_content,
+                'words_count': word_count,
+                'ssl': is_https(current_url),
+                'robots_txt': has_robots_txt(extract_domain_name(current_url)),
+                'sitemap_xml': has_sitemap_xml(extract_domain_name(current_url)),
+                'page_load_speed': get_page_load_speed(current_url),
+                "total_images":total_images,
+                "imgWithoutAlt": images_without_alt,
+                "total_links": len(links),
+                "internal_links": internal_links,
+                "external_links": external_links,
+                "broken_links": broken_links
 
             }
             #save_json('test.json', crawled_data)
@@ -138,3 +171,4 @@ def getInfo(current_url):
         
     except requests.RequestException as e:
         print(f"Failed to crawl {current_url}: {e}")
+        return False
